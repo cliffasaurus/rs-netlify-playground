@@ -1,3 +1,6 @@
+import ExtractTextPlugin from 'extract-text-webpack-plugin'
+import CopyWebpackPlugin from 'copy-webpack-plugin'
+
 const fs = require('fs')
 const klaw = require('klaw')
 const path = require('path')
@@ -42,7 +45,6 @@ function getPosts () {
 }
 
 export default {
-
   getSiteData: () => ({
     title: 'React Static with Netlify CMS',
   }),
@@ -77,4 +79,68 @@ export default {
       },
     ]
   },
+    webpack: [
+    (config, { defaultLoaders, stage }) => {
+      if (stage === 'prod') {
+        config.entry = ['babel-polyfill', config.entry]
+      } else if (stage === 'dev') {
+        config.entry = ['babel-polyfill', ...config.entry]
+      }
+      config.node = {
+        fs: "empty"
+      }
+      config.module.rules = [
+        {
+          oneOf: [
+            {
+              test: /\.s(a|c)ss$/,
+              use:
+                stage === 'dev'
+                  ? [{ loader: 'style-loader' }, { loader: 'css-loader' }, { loader: 'sass-loader' }]
+                  : ExtractTextPlugin.extract({
+                    use: [
+                      {
+                        loader: 'css-loader',
+                        options: {
+                          importLoaders: 1,
+                          minimize: true,
+                          sourceMap: false,
+                        },
+                      },
+                      {
+                        loader: 'postcss-loader',
+                        options: {
+                          ident: 'postcss',
+                          plugins: (loader) => [
+                            require('postcss-cssnext')(),
+                            ],
+                          }
+                        },
+                      {
+                        loader: 'sass-loader',
+                        options: { includePaths: ['src/'] },
+                      },
+                    ],
+                  }),
+            },
+            defaultLoaders.cssLoader,
+            defaultLoaders.jsLoader,
+            defaultLoaders.fileLoader,
+          ],
+        },
+      ]
+      return config
+    },
+    (config) => {
+      config.plugins.push(new CopyWebpackPlugin(
+        [
+          // { from: '/home/fullstack/Documents/psd-wizard-dev/redirects/_redirects' }
+          // try new-branch remerge to master for unable to locate prod
+          // { from: '../../../../copystatic/' }
+          { from: '../../../copystatic/' }
+        ]
+      ))
+      return config
+    }
+  ]
 }
