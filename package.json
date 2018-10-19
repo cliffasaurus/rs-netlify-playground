@@ -15,6 +15,7 @@
     "dotenv": "^6.1.0",
     "dotenv-cli": "^1.4.0",
     "gray-matter": "^3.1.1",
+    "history": "^4.7.2",
     "klaw": "^2.1.1",
     "moment": "^2.20.1",
     "react": "^16.0.0",
